@@ -57,9 +57,12 @@ var resetButton = document.getElementById("app-reset-button")
 
 var controlsContainer = document.getElementById("app-controls-container")
 
+var liveColorInput = document.getElementById("app-live-color")
+
 let width = Int(document.body.clientWidth.number!) / (BoardCanvas.cellSize + BoardCanvas.boarderWidth)
 let height = Int(document.body.clientHeight.number! - controlsContainer.clientHeight.number!) / (BoardCanvas.cellSize + BoardCanvas.boarderWidth)
-let boardView = BoardCanvas(canvas: canvas, size: (width, height))
+
+var boardView = BoardCanvas(canvas: canvas, size: (width, height), liveColor: liveColorInput.value.string!)
 
 var lifeGame = App(initial: initialCells(width: width, height: height), canvas: boardView)
 
@@ -79,7 +82,17 @@ let resetFn = JSClosure { _ in
     lifeGame = App(initial: initialCells(width: width, height: height), canvas: boardView)
 }
 
+let updateBoardFn = JSClosure { _ in
+    boardView = BoardCanvas(canvas: canvas, size: (width, height), liveColor: liveColorInput.value.string!)
+
+    lifeGame = App(initial: initialCells(width: width, height: height), canvas: boardView)
+
+    return .undefined
+}
+
 iterateButton.onclick = .function(iterateFn)
 startButton.onclick = .function(startFn)
 stopButton.onclick = .function(stopFn)
 resetButton.onclick = .function(resetFn)
+
+liveColorInput.onchange = .function(updateBoardFn)
