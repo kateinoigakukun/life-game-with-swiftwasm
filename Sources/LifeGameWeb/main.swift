@@ -24,6 +24,12 @@ class App: BoardUpdater {
         canvas.drawCell(cell, at: point)
     }
 
+    func noUpdate(at point: Point, cell: Cell) {
+        if (canvas.shouldDrawCellOnNoUpdate) {
+            canvas.drawCell(cell, at: point)
+        }
+    }
+
     func iterate() {
         LifeGame.iterate(cells, updater: self)
     }
@@ -57,9 +63,21 @@ var resetButton = document.getElementById("app-reset-button")
 
 var controlsContainer = document.getElementById("app-controls-container")
 
-let width = Int(document.body.clientWidth.number!) / (BoardCanvas.cellSize + BoardCanvas.boarderWidth)
-let height = Int(document.body.clientHeight.number! - controlsContainer.clientHeight.number!) / (BoardCanvas.cellSize + BoardCanvas.boarderWidth)
-let boardView = BoardCanvas(canvas: canvas, size: (width, height))
+var canvasTypeSelect = document.getElementById("app-canvas-type")
+
+let width = Int(document.body.clientWidth.number!) / (BasicBoardCanvas.cellSize + BasicBoardCanvas.boarderWidth)
+let height = Int(document.body.clientHeight.number! - controlsContainer.clientHeight.number!) / (BasicBoardCanvas.cellSize + BasicBoardCanvas.boarderWidth)
+
+func canvasForType(_ type: String) -> BoardCanvas {
+    switch type {
+        case "persisted":
+            return PersistedBoardCanvas(canvas: canvas, size: (width, height))
+        default:
+            return BasicBoardCanvas(canvas: canvas, size: (width, height))
+    }
+}
+
+var boardView = canvasForType(canvasTypeSelect.value.string!)
 
 var lifeGame = App(initial: initialCells(width: width, height: height), canvas: boardView)
 
@@ -79,7 +97,16 @@ let resetFn = JSClosure { _ in
     lifeGame = App(initial: initialCells(width: width, height: height), canvas: boardView)
 }
 
+let updateBoardFn = JSClosure { _ in
+    boardView = canvasForType(canvasTypeSelect.value.string!)
+
+    lifeGame = App(initial: initialCells(width: width, height: height), canvas: boardView)
+    return nil
+}
+
 iterateButton.onclick = .function(iterateFn)
 startButton.onclick = .function(startFn)
 stopButton.onclick = .function(stopFn)
 resetButton.onclick = .function(resetFn)
+
+canvasTypeSelect.onchange = .function(updateBoardFn)

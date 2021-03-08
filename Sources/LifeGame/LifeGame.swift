@@ -9,6 +9,7 @@ public typealias Point = (x: Int, y: Int)
 
 public protocol BoardUpdater {
     func update(at point: Point, cell: Cell)
+    func noUpdate(at point: Point, cell: Cell)
 }
 
 public func iterate<U: BoardUpdater>(_ cells: [[Cell]], updater: U) {
@@ -29,12 +30,17 @@ public func iterate<U: BoardUpdater>(_ cells: [[Cell]], updater: U) {
         }
 
         if !cell.live {
-            guard liveCount == 3 else { return }
+            guard liveCount == 3 else { 
+                updater.noUpdate(at: point, cell: cell)
+                return 
+            }
             updater.update(at: point, cell: Cell(live: true))
         }
 
         switch liveCount {
-        case 2, 3: return
+        case 2, 3: 
+            updater.noUpdate(at: point, cell: cell)
+            return
         case ...1:
             updater.update(at: point, cell:  Cell(live: false))
             return
